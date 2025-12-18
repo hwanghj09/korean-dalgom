@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    -webkit-tap-highlight-color: transparent; /* 터치 시 파란 박스 제거 */
+    background-color: #f8fafc; /* 더 부드러운 배경색 */
+  }
+  
+  /* 지문 가독성을 위한 폰트 설정 */
+  .passage-text {
+    line-height: 1.8;
+    letter-spacing: -0.01em;
+    font-size: 1.05rem;
+  }
+}
+
+/* 모바일 앱 애니메이션 */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
