@@ -12,7 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             onClick={() => navigate('/')} 
             className="text-xl font-bold cursor-pointer text-blue-600"
           >
-            수능 국어 마스터
+            달곰 국어
           </h1>
         </div>
       </header>
