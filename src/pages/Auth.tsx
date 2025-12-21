@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { ref, set } from 'firebase/database';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 
@@ -21,13 +21,12 @@ export default function Auth() {
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         // 회원가입 시 랭킹 시스템을 위한 데이터 초기화
-        await set(ref(db, `users/${userCredential.user.uid}`), {
-          email,
-          createdAt: new Date().toISOString(),
-          totalSolved: 0,    // 시도한 총 문제 수
-          totalCorrect: 0,   // 맞힌 총 문제 수
-          totalIncorrect: 0, // 틀린 총 문제 수
-          uid: userCredential.user.uid
+        await setDoc(doc(db, "users", userCredential.user.uid), {
+          email: userCredential.user.email,
+          totalSolved: 0,
+          totalCorrect: 0,
+          totalIncorrect: 0,
+          createdAt: serverTimestamp() // 또는 new Date().toISOString()
         });
       }
       navigate('/');
