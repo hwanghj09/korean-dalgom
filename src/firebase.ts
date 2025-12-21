@@ -1,17 +1,19 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore"; // 🔥 변경: firestore 임포트
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDUtJIAGXJAqbq9vEeTfH_P0XLTJBtNtIE",
-  authDomain: "korean-dalgom.firebaseapp.com",
-  projectId: "korean-dalgom",
-  storageBucket: "korean-dalgom.firebasestorage.app",
-  messagingSenderId: "829421639741",
-  appId: "1:829421639741:web:016c8f3631c78a4cf0f254",
-  measurementId: "G-YCDWE3D4T5"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
+// 파이어베이스 초기화
 const app = initializeApp(firebaseConfig);
+
 export const auth = getAuth(app);
-export const db = getFirestore(app); // 🔥 변경: getDatabase 대신 getFirestore
+export const db = getFirestore(app);
