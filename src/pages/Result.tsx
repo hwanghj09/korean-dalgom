@@ -18,14 +18,20 @@ export default function Result() {
   if (!state) return <Layout><div className="text-center py-20">데이터가 없습니다.</div></Layout>;
 
   const { questions, userAnswers, category } = state as { questions: Question[]; userAnswers: number[]; category: string };
-  const incorrectList = questions.filter((q, idx) => q.answer !== userAnswers[idx]);
+
+  // --- 📝 점수 계산 로직 (안 푼 문제는 오답 처리) ---
+  const incorrectList = questions.filter((q, idx) => {
+    const userAnswer = userAnswers[idx];
+    // 답변이 null/undefined(안 푼 문제)이거나 정답과 다르면 오답
+    return userAnswer === null || userAnswer === undefined || q.answer !== userAnswer;
+  });
+
   const correctCount = questions.length - incorrectList.length;
   const score = Math.round((correctCount / questions.length) * 100);
 
-  // --- 🔥 [핵심] Firestore 자동 저장 로직 ---
+  // --- 🔥 Firestore 자동 저장 로직 ---
   useEffect(() => {
     const saveToFirestore = async () => {
-      // 로그인하지 않았거나 결과 데이터가 없으면 중단
       if (!user || !state) return;
 
       const userRef = doc(db, "users", user.uid);
@@ -34,7 +40,6 @@ export default function Result() {
         const userSnap = await getDoc(userRef);
         
         if (userSnap.exists()) {
-          // 1. 기존 데이터가 있는 경우: 기존 값에 현재 점수 합산
           const currentData = userSnap.data();
           await updateDoc(userRef, {
             totalSolved: (currentData.totalSolved || 0) + questions.length,
@@ -43,7 +48,6 @@ export default function Result() {
             lastUpdated: new Date().toISOString()
           });
         } else {
-          // 2. 처음 플레이하는 유저인 경우: 새 문서 생성
           await setDoc(userRef, {
             email: user.email,
             totalSolved: questions.length,
@@ -52,14 +56,14 @@ export default function Result() {
             lastUpdated: new Date().toISOString()
           });
         }
-        console.log("✅ Firestore 데이터 업데이트 성공!");
+        console.log("✅ Firestore 저장 성공!");
       } catch (e) {
         console.error("❌ Firestore 저장 실패:", e);
       }
     };
 
     saveToFirestore();
-  }, []); // 의존성 배열을 비워두어 페이지 진입 시 단 1회만 실행
+  }, []);
 
   // 스크롤 버튼 로직
   useEffect(() => {
@@ -68,9 +72,12 @@ export default function Result() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // 필터링된 리스트 생성
   const filtered = questions.map((q, idx) => ({ q, idx })).filter(({ q, idx }) => {
-    if (filter === 'correct') return q.answer === userAnswers[idx];
-    if (filter === 'incorrect') return q.answer !== userAnswers[idx];
+    const userAnswer = userAnswers[idx];
+    const isCorrect = userAnswer !== null && userAnswer !== undefined && q.answer === userAnswer;
+    if (filter === 'correct') return isCorrect;
+    if (filter === 'incorrect') return !isCorrect;
     return true;
   });
 
@@ -103,18 +110,25 @@ export default function Result() {
         {/* 문제 리스트 */}
         <div className="space-y-6">
           {filtered.map(({ q, idx }) => {
-            const isCorrect = q.answer === userAnswers[idx];
+            const userAnswer = userAnswers[idx];
+            const isCorrect = userAnswer !== null && userAnswer !== undefined && q.answer === userAnswer;
+            const isNotAnswered = userAnswer === null || userAnswer === undefined;
+
             return (
               <div key={q.id} className={`bg-white p-6 rounded-2xl border-2 ${isCorrect ? 'border-green-100' : 'border-red-100 shadow-sm'}`}>
                 <div className="flex justify-between items-center mb-4">
-                  <span className={`px-3 py-1 rounded-lg text-xs font-black ${isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{isCorrect ? '정답' : '오답'}</span>
+                  <span className={`px-3 py-1 rounded-lg text-xs font-black ${isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {isCorrect ? '정답' : isNotAnswered ? '미선택 오답' : '오답'}
+                  </span>
                   <span className="text-gray-400 font-bold text-sm"># {idx + 1}</span>
                 </div>
                 <p className="font-bold text-gray-800 mb-6 leading-relaxed">{q.question}</p>
                 
                 <div className="bg-gray-50 p-4 rounded-xl border mb-4 flex justify-between text-sm font-bold">
                   <span className="text-blue-600">정답: {q.answer + 1}번</span>
-                  <span className={isCorrect ? "text-green-600" : "text-red-600"}>내 선택: {userAnswers[idx] !== null ? `${userAnswers[idx] + 1}번` : '미선택'}</span>
+                  <span className={isCorrect ? "text-green-600" : "text-red-600"}>
+                    내 선택: {isNotAnswered ? '❌ 미선택' : `${userAnswer + 1}번`}
+                  </span>
                 </div>
 
                 {/* 해설 영역 */}
@@ -140,7 +154,7 @@ export default function Result() {
                   }} 
                   className="w-full py-4 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-50 transition-colors"
                 >
-                  {user ? "문제 및 지문 상세 보기" : "🔍 로그인하고 지문 보기"}
+                  문제 상세 보기
                 </button>
               </div>
             );
