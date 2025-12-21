@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Question } from '../types';
 import Layout from '../components/Layout';
+import { auth } from '../firebase';
 
 export default function QuizPage() {
   const { category } = useParams<{ category: string }>();
@@ -12,7 +13,27 @@ export default function QuizPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
   const [loading, setLoading] = useState(true);
+  // QuizPage.tsx 내부 useEffect
+const user = auth.currentUser;
 
+useEffect(() => {
+  fetch(`/questions/${category}.json`)
+    .then(res => res.json())
+    .then((data: Question[]) => {
+      let finalQuestions = data;
+      
+      // 비로그인 사용자: 무조건 10문제로 제한
+      if (!user) {
+        finalQuestions = [...data].sort(() => Math.random() - 0.5).slice(0, 10);
+      } else if (state?.limit && state.limit !== 'all') {
+        finalQuestions = [...data].sort(() => Math.random() - 0.5).slice(0, state.limit);
+      }
+
+      setQuestions(finalQuestions);
+      setUserAnswers(new Array(finalQuestions.length).fill(null));
+      setLoading(false);
+    });
+}, [category, user]);
   useEffect(() => {
     if (state?.retryQuestions) {
       // 오답 재도전 모드
@@ -30,7 +51,7 @@ export default function QuizPage() {
         });
     }
   }, [category, state]);
-
+  
   // QuizPage.tsx 내의 useEffect 수정
 useEffect(() => {
   if (state?.retryQuestions) {
