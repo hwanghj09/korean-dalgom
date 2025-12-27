@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Category } from '../types';
 import Layout from '../components/Layout';
 import { auth } from '../firebase'; 
 import { signOut } from 'firebase/auth';
