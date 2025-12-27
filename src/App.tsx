@@ -4,6 +4,7 @@ import QuizPage from './pages/QuizPage';
 import Result from './pages/Result';
 import Auth from './pages/Auth';
 import Ranking from './pages/Ranking';
+import Admin from './pages/Admin';
 function App() {
   return (
     <BrowserRouter>
@@ -13,6 +14,7 @@ function App() {
         <Route path="/result" element={<Result />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/ranking" element={<Ranking />} />
+        <Route path="/admin" element={<Admin />} />
       </Routes>
     </BrowserRouter>
   );
